@@ -15,6 +15,8 @@ namespace AverageScreenColor.Utility
         private int _lightningMode;
         private bool _active;
         private Timer _timer;
+
+        public bool AllScreens;
         //CorsairKeyboard keyboard;
 
         public Interaction()
@@ -77,7 +79,7 @@ namespace AverageScreenColor.Utility
         {
             var capture = new ScreenTools();
             var bounds = new Rectangle();
-            var img = capture.Screen(ref bounds);
+            var img = capture.Screen(ref bounds, AllScreens);
             img = new Bitmap(img, new Size(img.Width / 100, img.Height / 100));
             var background = GetDominantColor(img);
             Debug.Print(background.ToString());
@@ -90,7 +92,7 @@ namespace AverageScreenColor.Utility
         {
             var capture = new ScreenTools();
             var bounds = new Rectangle();
-            var img = capture.Screen(ref bounds);
+            var img = capture.Screen(ref bounds, AllScreens);
             img = new Bitmap(img, new Size(img.Width / 100, img.Height / 100));
             var background = GetDominantColor(img);
             Debug.Print(background.ToString());
@@ -101,7 +103,7 @@ namespace AverageScreenColor.Utility
         {
             var capture = new ScreenTools();
             var bounds = new Rectangle();
-            var img = capture.Screen(ref bounds);
+            var img = capture.Screen(ref bounds, AllScreens);
             img = new Bitmap(img, new Size(img.Width / 10, img.Height / 10));
             return BitmapToImageSource(img);
         }

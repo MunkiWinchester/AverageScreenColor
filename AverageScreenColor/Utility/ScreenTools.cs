@@ -10,11 +10,12 @@ namespace AverageScreenColor.Utility
         private Bitmap _newBitmap;
         private Bitmap _prevBitmap;
 
-        public Bitmap Screen(ref Rectangle bounds)
+        public Bitmap Screen(ref Rectangle bounds, bool all)
         {
             // Capture a new screenshot.
             //
-            _newBitmap = CaptureScreen.CaptureDesktopWithCursor();
+
+            _newBitmap = all ? CaptureScreen.CaptureAllScreens() : CaptureScreen.CaptureDesktopWithCursor();
 
             // If we have a previous screenshot, only send back
             //    a subset that is the minimum rectangular area
@@ -49,19 +50,16 @@ namespace AverageScreenColor.Utility
             // We don't have a previous screen capture. Therefore
             //    we need to send back the whole screen this time.
             //
-            else
-            {
-                // Set the previous bitmap to the current to prepare
-                //    for the next screen capture.
-                //
-                _prevBitmap = _newBitmap;
+            // Set the previous bitmap to the current to prepare
+            //    for the next screen capture.
+            //
+            _prevBitmap = _newBitmap;
 
-                // Create a bounding rectangle.
-                //
-                bounds = new Rectangle(0, 0, _newBitmap.Width, _newBitmap.Height);
+            // Create a bounding rectangle.
+            //
+            bounds = new Rectangle(0, 0, _newBitmap.Width, _newBitmap.Height);
 
-                return _newBitmap;
-            }
+            return _newBitmap;
         }
 
         private Rectangle GetBoundingBoxForChanges()

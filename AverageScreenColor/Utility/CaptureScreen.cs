@@ -1,103 +1,74 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
-using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace AverageScreenColor.Utility
 {
     public class CaptureScreen
     {
-        //This structure shall be used to keep the size of the screen.
-        public struct Size
-        {
-            public int Cx;
-            public int Cy;
-        }
-
-        public static Bitmap CaptureDesktop()
-        {
-            Size size;
-            var hDc = Win32Stuff.GetDC(Win32Stuff.GetDesktopWindow());
-            var hMemDc = GdiStuff.CreateCompatibleDC(hDc);
-
-            size.Cx = Win32Stuff.GetSystemMetrics
-                      (Win32Stuff.SmCxscreen);
-
-            size.Cy = Win32Stuff.GetSystemMetrics
-                      (Win32Stuff.SmCyscreen);
-
-            var hBitmap = GdiStuff.CreateCompatibleBitmap(hDc, size.Cx, size.Cy);
-
-            if (hBitmap != IntPtr.Zero)
-            {
-                var hOld = GdiStuff.SelectObject
-                    (hMemDc, hBitmap);
-
-                GdiStuff.BitBlt(hMemDc, 0, 0, size.Cx, size.Cy, hDc,
-                                               0, 0, GdiStuff.Srccopy);
-
-                GdiStuff.SelectObject(hMemDc, hOld);
-                GdiStuff.DeleteDC(hMemDc);
-                Win32Stuff.ReleaseDC(Win32Stuff.GetDesktopWindow(), hDc);
-                var bmp = Image.FromHbitmap(hBitmap);
-                GdiStuff.DeleteObject(hBitmap);
-                GC.Collect();
-                return bmp;
-            }
-            return null;
-
-        }
-
-
-        public static Bitmap CaptureCursor(ref int x, ref int y)
-        {
-            var ci = new Win32Stuff.Cursorinfo();
-            ci.cbSize = Marshal.SizeOf(ci);
-            if (Win32Stuff.GetCursorInfo(out ci))
-            {
-                if (ci.flags == Win32Stuff.CursorShowing)
-                {
-                    var hicon = Win32Stuff.CopyIcon(ci.hCursor);
-                    if (Win32Stuff.GetIconInfo(hicon, out var icInfo))
-                    {
-                        x = ci.ptScreenPos.x - icInfo.xHotspot;
-                        y = ci.ptScreenPos.y - icInfo.yHotspot;
-
-                        var ic = Icon.FromHandle(hicon);
-                        var bmp = ic.ToBitmap();
-                        return bmp;
-                    }
-                }
-            }
-
-            return null;
-        }
-
         public static Bitmap CaptureDesktopWithCursor()
         {
-            var cursorX = 0;
-            var cursorY = 0;
+            var screen = DetermineScreen(Win32Stuff.GetCursorPosition(), Screen.AllScreens);
 
-            var desktopBmp = CaptureDesktop();
-            var cursorBmp = CaptureCursor(ref cursorX, ref cursorY);
-            if (desktopBmp != null)
+            if (screen != null)
             {
-                if (cursorBmp != null)
+                var bmp = new Bitmap(screen.Bounds.Width, screen.Bounds.Height);
+                // Draw the screenshot into our bitmap.
+                using (var g = Graphics.FromImage(bmp))
                 {
-                    var r = new Rectangle(cursorX, cursorY, cursorBmp.Width, cursorBmp.Height);
-                    var g = Graphics.FromImage(desktopBmp);
-                    g.DrawImage(cursorBmp, r);
-                    g.Flush();
-
-                    return desktopBmp;
+                    g.CopyFromScreen(screen.Bounds.Left, screen.Bounds.Top, 0, 0, bmp.Size);
                 }
-                else
-                    return desktopBmp;
+
+                return bmp;
             }
 
             return null;
-
         }
 
+        private static Screen DetermineScreen(Point p, IEnumerable<Screen> screens)
+        {
+            foreach (var screen in screens)
+            {
+                if(screen.Bounds.X >= p.X)
+                    continue;
+                if(screen.Bounds.X + screen.Bounds.Width <= p.X)
+                    continue;
+                if(screen.Bounds.Y >= p.Y)
+                    continue;
+                if (screen.Bounds.Y - screen.Bounds.Height <= p.Y)
+                    return screen;
+            }
 
+            return null;
+        }
+
+        public static Bitmap CaptureAllScreens()
+        {
+            var screenLeft = SystemInformation.VirtualScreen.Left;
+            var screenTop = SystemInformation.VirtualScreen.Top;
+            var screenWidth = SystemInformation.VirtualScreen.Width;
+            var screenHeight = SystemInformation.VirtualScreen.Height;
+
+            var endBmp = new Bitmap(screenWidth, screenHeight);
+            foreach (var screen in  Screen.AllScreens)
+            {
+                var bmp = new Bitmap(screen.Bounds.Width, screen.Bounds.Height);
+                // Draw the screenshot into our bitmap.
+                using (var g = Graphics.FromImage(endBmp))
+                {
+                    var left = screen.Bounds.Left;
+                    if (screenLeft < 0)
+                        left = screen.Bounds.Left + Math.Abs(screenLeft);
+                    var top = screen.Bounds.Top;
+                    if (screenTop < 0)
+                        top = screen.Bounds.Top + Math.Abs(screenTop);
+
+                    g.CopyFromScreen(screen.Bounds.Left, screen.Bounds.Top, left, top, bmp.Size);
+                }
+            }
+
+            return endBmp;
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Runtime.InteropServices;
 
 namespace AverageScreenColor.Utility
@@ -68,7 +69,37 @@ namespace AverageScreenColor.Utility
         [DllImport("user32.dll", EntryPoint = "GetIconInfo")]
         public static extern bool GetIconInfo(IntPtr hIcon, out Iconinfo piconinfo);
 
+        /// <summary>
+        /// Retrieves the cursor's position, in screen coordinates.
+        /// </summary>
+        /// <see>See MSDN documentation for further information.</see>
+        [DllImport("user32.dll")]
+        public static extern bool GetCursorPos(out POINT lpPoint);
+
+        public static System.Drawing.Point GetCursorPosition()
+        {
+            GetCursorPos(out var lpPoint);
+            //bool success = User32.GetCursorPos(out lpPoint);
+            // if (!success)
+
+            return lpPoint;
+        }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Struct representing a point.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct POINT
+    {
+        public int X;
+        public int Y;
+
+        public static implicit operator Point(POINT point)
+        {
+            return new Point(point.X, point.Y);
+        }
     }
 }
