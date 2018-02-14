@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -197,7 +198,7 @@ namespace AverageScreenColor.Utility
         }
         */
 
-        private static BitmapImage BitmapToImageSource(Image bitmap)
+        public static BitmapImage BitmapToImageSource(Image bitmap)
         {
             using (var memory = new MemoryStream())
             {
@@ -211,6 +212,11 @@ namespace AverageScreenColor.Utility
 
                 return bitmapimage;
             }
+        }
+
+        public List<ScreenDisplayItem> LoadScreens()
+        {
+            return CaptureScreen.LoadScreens();
         }
     }
 }

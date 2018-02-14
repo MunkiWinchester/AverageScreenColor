@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
+using System.Windows.Media.Imaging;
 
 namespace AverageScreenColor.Utility
 {
@@ -69,6 +71,33 @@ namespace AverageScreenColor.Utility
             }
 
             return endBmp;
+        }
+
+        public static List<ScreenDisplayItem> LoadScreens()
+        {
+            var list = new List<ScreenDisplayItem>();
+            foreach (var screen in Screen.AllScreens.OrderBy(s => s.Bounds.Left))
+            {
+                var bmp = new Bitmap(screen.Bounds.Width, screen.Bounds.Height);
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    g.CopyFromScreen(screen.Bounds.Left, screen.Bounds.Top, 0, 0, bmp.Size);
+                }
+
+                list.Add(new ScreenDisplayItem
+                {
+                    IsChecked = screen.Primary,
+                    Screen = screen,
+                    Image =
+                        ResizeImage(bmp, new Size(screen.Bounds.Width /10, screen.Bounds.Height /10))
+                });
+            }
+
+            return list;
+        }
+        public static BitmapImage ResizeImage(Bitmap imgToResize, Size size)
+        {
+            return Interaction.BitmapToImageSource(new Bitmap(imgToResize, size));
         }
     }
 }
