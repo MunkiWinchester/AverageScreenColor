@@ -10,13 +10,20 @@ namespace AverageScreenColor.Utility
         private Bitmap _newBitmap;
         private Bitmap _prevBitmap;
 
-        public Bitmap Screen(ref Rectangle bounds, bool all)
+        public Bitmap Screen(ref Rectangle bounds, CaptureMode captureMode, ScreenDisplayItem screen = null)
         {
             // Capture a new screenshot.
             //
 
-            _newBitmap = all ? CaptureScreen.CaptureAllScreens() : CaptureScreen.CaptureDesktopWithCursor();
+            if (captureMode == CaptureMode.AllScreens)
+                _newBitmap = CaptureScreen.CaptureAllScreens();
+            else if(captureMode == CaptureMode.ActiveScreen)
+                _newBitmap = CaptureScreen.CaptureDesktopWithCursor();
+            else if (captureMode == CaptureMode.SpecificScreen)
+                _newBitmap = CaptureScreen.CaptureSpecificScreen(screen);
 
+            if (_newBitmap == null)
+                _newBitmap = new Bitmap(0, 0);
             // If we have a previous screenshot, only send back
             //    a subset that is the minimum rectangular area
             //    that encompasses all the changed pixels.

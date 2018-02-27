@@ -68,6 +68,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Utility\CaptureMode.cs" />
     <Compile Include="Utility\ScreenDisplayItem.cs" />
     <Compile Include="Views\ScreenView.xaml.cs">
       <DependentUpon>ScreenView.xaml</DependentUpon>

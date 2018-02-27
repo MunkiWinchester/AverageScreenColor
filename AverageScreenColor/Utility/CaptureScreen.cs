@@ -32,11 +32,11 @@ namespace AverageScreenColor.Utility
         {
             foreach (var screen in screens)
             {
-                if(screen.Bounds.X >= p.X)
+                if (screen.Bounds.X >= p.X)
                     continue;
-                if(screen.Bounds.X + screen.Bounds.Width <= p.X)
+                if (screen.Bounds.X + screen.Bounds.Width <= p.X)
                     continue;
-                if(screen.Bounds.Y >= p.Y)
+                if (screen.Bounds.Y >= p.Y)
                     continue;
                 if (screen.Bounds.Y - screen.Bounds.Height <= p.Y)
                     return screen;
@@ -53,7 +53,7 @@ namespace AverageScreenColor.Utility
             var screenHeight = SystemInformation.VirtualScreen.Height;
 
             var endBmp = new Bitmap(screenWidth, screenHeight);
-            foreach (var screen in  Screen.AllScreens)
+            foreach (var screen in Screen.AllScreens)
             {
                 var bmp = new Bitmap(screen.Bounds.Width, screen.Bounds.Height);
                 // Draw the screenshot into our bitmap.
@@ -89,15 +89,34 @@ namespace AverageScreenColor.Utility
                     IsChecked = screen.Primary,
                     Screen = screen,
                     Image =
-                        ResizeImage(bmp, new Size(screen.Bounds.Width /10, screen.Bounds.Height /10))
+                        ResizeImage(bmp, new Size(screen.Bounds.Width / 10, screen.Bounds.Height / 10))
                 });
             }
 
             return list;
         }
+
         public static BitmapImage ResizeImage(Bitmap imgToResize, Size size)
         {
-            return Interaction.BitmapToImageSource(new Bitmap(imgToResize, size));
+            return Interaction.ToBitmapImage(new Bitmap(imgToResize, size));
+        }
+
+        public static Bitmap CaptureSpecificScreen(ScreenDisplayItem screenDisplayItem)
+        {
+            if (screenDisplayItem?.Screen != null)
+            {
+                var bmp = new Bitmap(screenDisplayItem.Screen.Bounds.Width, screenDisplayItem.Screen.Bounds.Height);
+                // Draw the screenshot into our bitmap.
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    g.CopyFromScreen(screenDisplayItem.Screen.Bounds.Left, screenDisplayItem.Screen.Bounds.Top, 0, 0,
+                        bmp.Size);
+                }
+
+                return bmp;
+            }
+
+            return null;
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging;
@@ -16,6 +17,8 @@ namespace AverageScreenColor.Utility
         private int _lightningMode;
         private bool _active;
         private Timer _timer;
+        private CaptureMode _captureMode;
+        private ScreenDisplayItem _screenDisplayItem;
 
         public bool AllScreens;
         //CorsairKeyboard keyboard;
@@ -47,7 +50,7 @@ namespace AverageScreenColor.Utility
             }
             _timer = new Timer();
             _timer.Tick += Refresh;
-            _timer.Interval = 100; // in miliseconds
+            _timer.Interval = (int) TimeSpan.FromSeconds(1).TotalMilliseconds;
             _timer.Start();
         }
 
@@ -67,7 +70,7 @@ namespace AverageScreenColor.Utility
             }*/
             if (_active)
             {
-                AverageColor();
+                LoadAverageColor(_captureMode, _screenDisplayItem);
             }
             else
             {
@@ -76,37 +79,32 @@ namespace AverageScreenColor.Utility
             }
         }
 
-        public void AverageColor()
+        public SolidColorBrush LoadAverageColor(CaptureMode captureMode, ScreenDisplayItem screen = null)
         {
-            var capture = new ScreenTools();
-            var bounds = new Rectangle();
-            var img = capture.Screen(ref bounds, AllScreens);
-            img = new Bitmap(img, new Size(img.Width / 100, img.Height / 100));
+            var img = LoadBitmap(captureMode, screen);
             var background = GetDominantColor(img);
             Debug.Print(background.ToString());
-            var brush = new SolidColorBrush(background) {Brightness = 1f};
+            //var brush = new SolidColorBrush(background) {Brightness = 1f};
             //keyboard.Brush = brush;
             //keyboard.Update();
-        }
-
-        public SolidColorBrush LoadAverageColor()
-        {
-            var capture = new ScreenTools();
-            var bounds = new Rectangle();
-            var img = capture.Screen(ref bounds, AllScreens);
-            img = new Bitmap(img, new Size(img.Width / 100, img.Height / 100));
-            var background = GetDominantColor(img);
-            Debug.Print(background.ToString());
             return new SolidColorBrush(background);
         }
 
-        public BitmapImage LoadSceen()
+        public BitmapImage LoadScreen(CaptureMode captureMode, ScreenDisplayItem screen = null)
         {
+            var img = LoadBitmap(captureMode, screen);
+            return ToBitmapImage(img);
+        }
+
+        private Bitmap LoadBitmap(CaptureMode captureMode, ScreenDisplayItem screen = null)
+        {
+            _captureMode = captureMode;
+            _screenDisplayItem = screen;
             var capture = new ScreenTools();
             var bounds = new Rectangle();
-            var img = capture.Screen(ref bounds, AllScreens);
-            img = new Bitmap(img, new Size(img.Width / 10, img.Height / 10));
-            return BitmapToImageSource(img);
+            var img = capture.Screen(ref bounds, captureMode, screen);
+            img = new Bitmap(img, new Size(img.Width / 20, img.Height / 20));
+            return img;
         }
 
         public Color GetDominantColor(Bitmap bmp)
@@ -198,19 +196,20 @@ namespace AverageScreenColor.Utility
         }
         */
 
-        public static BitmapImage BitmapToImageSource(Image bitmap)
+        public static BitmapImage ToBitmapImage(Image bitmap)
         {
-            using (var memory = new MemoryStream())
+            using (var memoryStream = new MemoryStream())
             {
-                bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
-                memory.Position = 0;
-                var bitmapimage = new BitmapImage();
-                bitmapimage.BeginInit();
-                bitmapimage.StreamSource = memory;
-                bitmapimage.CacheOption = BitmapCacheOption.OnLoad;
-                bitmapimage.EndInit();
+                bitmap.Save(memoryStream, ImageFormat.Png);
 
-                return bitmapimage;
+                memoryStream.Position = 0;
+                var result = new BitmapImage();
+                result.BeginInit();
+                result.CacheOption = BitmapCacheOption.OnLoad;
+                result.StreamSource = memoryStream;
+                result.EndInit();
+                result.Freeze();
+                return result;
             }
         }
 

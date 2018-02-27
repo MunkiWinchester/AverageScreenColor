@@ -45,24 +45,29 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition />
             </Grid.RowDefinitions>
-            <RadioButton Grid.Row="0"
+            <RadioButton x:Name="_radioButtonActive"
+                         Grid.Row="0"
                          Grid.Column="0"
                          Margin="10"
                          HorizontalAlignment="Center"
+                         Checked="ToggleButton_OnChecked"
                          Content="Capture active screen"
                          GroupName="ScreenSelectType" />
-            <RadioButton Grid.Row="0"
+            <RadioButton x:Name="_radioButtonAll"
+                         Grid.Row="0"
                          Grid.Column="1"
                          Margin="10"
                          HorizontalAlignment="Center"
+                         Checked="ToggleButton_OnChecked"
                          Content="Capture all screens"
                          GroupName="ScreenSelectType"
-                         IsChecked="{Binding CaptureAllScreens}" />
+                         IsChecked="True" />
             <RadioButton x:Name="_radioButtonSpecific"
                          Grid.Row="0"
                          Grid.Column="2"
                          Margin="10"
                          HorizontalAlignment="Center"
+                         Checked="ToggleButton_OnChecked"
                          Content="Capture specific screen"
                          GroupName="ScreenSelectType" />
             <ScrollViewer Grid.Row="1"
@@ -83,10 +88,16 @@
             </ScrollViewer>
             <Button Grid.Row="2"
                     Grid.Column="0"
-                    Grid.ColumnSpan="3"
+                    Grid.ColumnSpan="2"
                     Margin="10"
                     Command="{Binding LoadAmbientColorCommand}"
                     Content="Load Ambient Color" />
+            <CheckBox Grid.Row="2"
+                      Grid.Column="2"
+                      Margin="10"
+                      VerticalAlignment="Center"
+                      Content="Automatically refresh"
+                      IsChecked="{Binding AutomaticallyRefresh}" />
             <Rectangle Grid.Row="3"
                        Grid.Column="0"
                        Margin="10"
