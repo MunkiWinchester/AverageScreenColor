@@ -4,79 +4,49 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Windows.Forms;
 using System.Windows.Media.Imaging;
-using CUE.NET.Brushes;
-using CUE.NET.Devices.Generic.Enums;
-using CUE.NET.Exceptions;
+using RGB.NET.Brushes;
+using RGB.NET.Core;
+using RGB.NET.Devices.Asus;
+using RGB.NET.Devices.Corsair;
+using RGB.NET.Devices.CorsairLink;
+using Color = RGB.NET.Core.Color;
+using Rectangle = System.Drawing.Rectangle;
+using Size = System.Drawing.Size;
 
 namespace AverageScreenColor.Utility
 {
     public class Interaction
     {
-        private int _lightningMode;
-        private bool _active;
-        private Timer _timer;
-        private CaptureMode _captureMode;
-        private ScreenDisplayItem _screenDisplayItem;
-
         public bool AllScreens;
-        //CorsairKeyboard keyboard;
 
         public Interaction()
         {
             Initialize();
-            //keyboard = CueSDK.KeyboardSDK;
         }
 
         public void Initialize()
         {
             try
             {
-                //CueSDK.Initialize();
-                //Debug.WriteLine("Initialized with " + CueSDK.LoadedArchitecture + "-SDK");
+                var surface = RGBSurface.Instance;
+                surface.Exception += SurfaceOnException;
 
-                //CorsairKeyboard keyboard = CueSDK.KeyboardSDK;
-                //if (keyboard == null)
-                //    throw new WrapperException("No keyboard found");
+                //surface.LoadDevices(AsusDeviceProvider.Instance); // This one can cause some trouble right now
+                surface.LoadDevices(CorsairDeviceProvider.Instance);
+                surface.LoadDevices(CorsairLinkDeviceProvider.Instance);
+
+                surface.AlignDevices();
             }
-            catch (CUEException ex)
+            catch (Exception ex)
             {
-                Debug.WriteLine("CUE Exception! ErrorCode: " + Enum.GetName(typeof(CorsairError), ex.Error));
+                Debug.WriteLine($"Exception: {ex}! ErrorCode: {ex.InnerException}");
             }
-            catch (WrapperException ex)
-            {
-                Debug.WriteLine("Wrapper Exception! Message:" + ex.Message);
-            }
-            _timer = new Timer();
-            _timer.Tick += Refresh;
-            _timer.Interval = (int) TimeSpan.FromSeconds(1).TotalMilliseconds;
-            _timer.Start();
         }
 
-        private void Refresh(object sender, EventArgs e)
+        private void SurfaceOnException(ExceptionEventArgs exceptionEventArgs)
         {
-            /*switch (lightningMode)
-            {
-                case 0:
-                    AverageColor();
-                    break;
-                case 1:
-                    AmbientColor();
-                    break;
-                case 2:
-                    BottomColor();
-                    break;
-            }*/
-            if (_active)
-            {
-                LoadAverageColor(_captureMode, _screenDisplayItem);
-            }
-            else
-            {
-                //keyboard.Brush = null;
-                //keyboard.Update();
-            }
+            Debug.WriteLine(exceptionEventArgs.Exception.Message);
         }
 
         public SolidColorBrush LoadAverageColor(CaptureMode captureMode, ScreenDisplayItem screen = null)
@@ -84,10 +54,8 @@ namespace AverageScreenColor.Utility
             var img = LoadBitmap(captureMode, screen);
             var background = GetDominantColor(img);
             Debug.Print(background.ToString());
-            //var brush = new SolidColorBrush(background) {Brightness = 1f};
-            //keyboard.Brush = brush;
-            //keyboard.Update();
-            return new SolidColorBrush(background);
+            var brush = new SolidColorBrush(background) {Brightness = 1f};
+            return brush;
         }
 
         public BitmapImage LoadScreen(CaptureMode captureMode, ScreenDisplayItem screen = null)
@@ -96,10 +64,8 @@ namespace AverageScreenColor.Utility
             return ToBitmapImage(img);
         }
 
-        private Bitmap LoadBitmap(CaptureMode captureMode, ScreenDisplayItem screen = null)
+        private static Bitmap LoadBitmap(CaptureMode captureMode, ScreenDisplayItem screen = null)
         {
-            _captureMode = captureMode;
-            _screenDisplayItem = screen;
             var capture = new ScreenTools();
             var bounds = new Rectangle();
             var img = capture.Screen(ref bounds, captureMode, screen);
@@ -131,70 +97,8 @@ namespace AverageScreenColor.Utility
             g /= total;
             b /= total;
 
-            return Color.FromArgb(r, g, b);
+            return new Color(r, g, b);
         }
-
-        /*public void AmbientColor()
-        {
-            ScreenTools capture = new ScreenTools();
-            Rectangle bounds = new Rectangle();
-            Bitmap img = capture.Screen(ref bounds);
-            img = new Bitmap(img, new Size(img.Width / 90, img.Height / 90));
-            Color background = getDominantColor(img);
-            Debug.Print(background.ToString());
-            IBrush brush = new SolidColorBrush(background);
-            brush.Brightness = 1f;
-            keyboard.Brush = brush;
-            keyboard.Update();
-        }
-
-        private RectangleKeyGroup[,] GenerateAmbientKeyGroup(RectangleKeyGroup[,] rectGroup)
-        {
-            RectangleF rect = new RectangleF();
-            int xOffset = 20;
-            int yOffset = 20;
-            //423 maxWidth
-            //137 maxHeight
-            //20 horizontal Step
-            //20 vertical Step
-            rect.Width = 25;
-            rect.Height = 25;
-            for (int y = 0; y < rectGroup.GetLength(1); y++)
-            {
-                for (int x = 0; x < rectGroup.GetLength(0); x++)
-                {
-                    rect.X += xOffset;
-                    rectGroup[x, y] = new RectangleKeyGroup(keyboard, rect, 0.5f, true);
-                    //rectGroup[x, y].Brush = new RandomColorBrush();
-                }
-                rect.X = 0;
-                rect.Y += yOffset;
-            }
-
-            return rectGroup;
-        }
-
-        private void AverageOn()
-        {
-            _lightningMode = 0;
-            _active = true;
-        }
-
-        private void AverageOff()
-        {
-            _active = false;
-        }
-
-        private void Ambient()
-        {
-            _lightningMode = 1;
-        }
-
-        private void Bottom()
-        {
-            _lightningMode = 2;
-        }
-        */
 
         public static BitmapImage ToBitmapImage(Image bitmap)
         {

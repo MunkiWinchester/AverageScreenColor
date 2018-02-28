@@ -81,7 +81,7 @@ namespace AverageScreenColor.ViewModels
 
             _timer = new Timer();
             _timer.Tick += Refresh;
-            _timer.Interval = (int) TimeSpan.FromSeconds(1).TotalMilliseconds;
+            _timer.Interval = (int) TimeSpan.FromSeconds(0.5).TotalMilliseconds;
             _timer.Start();
         }
 
